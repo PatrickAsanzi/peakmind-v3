@@ -1,37 +1,69 @@
-﻿# MVP-Template
+﻿# PeakMind
 
-A reusable full-stack monorepo starter for .NET 8 backend and React + Vite + TypeScript frontend.
+PeakMind is a .NET 10 Minimal API project organized with a vertical-slice architecture. It uses MediatR for request handling, FluentValidation for input validation, and EF Core (Npgsql) with ASP.NET Core Identity for authentication (JWT tokens).
 
-## Structure
+Repository layout (relevant parts)
+- backend/ — .NET 10 API (Identity, EF Core, MediatR, FluentValidation)
+- frontend/ — (optional) frontend app
+- docker-compose.yml — local Docker services (postgres, backend, frontend)
 
-- `backend` - .NET 8 Web API starter
-- `frontend` - React Vite TypeScript starter
-- `docker-compose.yml` - local compose setup for both services
+Prerequisites
+- .NET 10 SDK (dotnet --info)
+- Docker Desktop (for Postgres container)
+- dotnet-ef tool (optional for creating migrations locally):
+  ```powershell
+  dotnet tool install --global dotnet-ef
+  ```
 
-## Backend
+Local development using Docker (recommended)
+1. Start Postgres container only (from repo root):
+   ```powershell
+   docker compose up -d postgres
+   docker compose logs -f postgres
+   ```
+   Wait for the log entry: "database system is ready to accept connections".
 
-```powershell
-cd backend
-dotnet restore
-dotnet build
-dotnet run
-```
+2. Create migrations (if needed) from the host:
+   ```powershell
+   dotnet restore
+   dotnet ef migrations add InitialCreate -p backend -s backend
+   ```
 
-## Frontend
+3. Apply migrations to the running Postgres (host):
+   ```powershell
+   dotnet ef database update -p backend -s backend --connection "Host=localhost;Port=5432;Database=peakminddb;Username=peakmind;Password=peakmind_pass"
+   ```
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+4. Start backend and frontend containers:
+   ```powershell
+   docker compose up -d backend frontend
+   docker compose logs -f backend
+   ```
 
-Open the Vite app at `http://localhost:5173`.
+Notes
+- The docker-compose file sets Postgres credentials via environment variables. If you change credentials after the Postgres volume has been initialized, you must remove the volume to reinitialize the DB:
+  ```powershell
+  docker compose down -v
+  docker compose up -d postgres
+  ```
+- The backend contains a startup routine that calls Database.Migrate() with retries so the app will attempt to apply migrations at container startup.
 
-## Docker Compose
+Configuration
+- Edit `backend/appsettings.json` to set DefaultConnection and Jwt settings (Key, Issuer, Audience). Use a strong, secret Jwt:Key in production.
 
-```powershell
-docker compose up --build
-```
+Authentication endpoints
+- POST /auth/register — register a new user (email, password, name)
+- POST /auth/login — returns a JWT token
 
-- frontend: `http://localhost:3000`
-- backend: `http://localhost:5000`
+Migrations
+- The initial migration has been generated and is located under `backend/Migrations`.
+
+Development tips
+- Open the solution in Visual Studio 2026, restore NuGet packages, build, and run.
+- If you need an admin user seeded at startup, I can add a simple seeder service.
+
+Support
+- Ask for changes: create a seeder, add refresh tokens, or produce a Postman collection.
+
+License: MIT
+
