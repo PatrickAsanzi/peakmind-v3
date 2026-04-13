@@ -7,10 +7,32 @@ services:
     ports:
       - "5000:80"
     environment:
+      ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: peakmind
+      POSTGRES_PASSWORD: peakmind_pass
+      POSTGRES_DB: peakminddb
+    depends_on:
+      - postgres
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
       - "3000:80"
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: peakmind
+      POSTGRES_PASSWORD: peakmind_pass
+      POSTGRES_DB: peakminddb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
