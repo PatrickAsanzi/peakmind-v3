@@ -1,26 +1,31 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useLogin } from "./hooks/useLogin";
-import LoginForm from "./components/LoginForm";
+import { useRegister } from "./hooks/useRegister";
+import RegisterForm from "./components/RegisterForm";
 
-export default function AuthPage() {
+export default function RegisterPage() {
   const navigate = useNavigate();
-  const { signIn, isLoading } = useLogin();
+  const { register } = useRegister();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    setIsLoading(true);
     try {
-      await signIn(email, password);
-      toast.success("Signed in successfully");
-      navigate("/dashboard");
+      await register({ name, email, password });
+      toast.success("Account created successfully. Please sign in.");
+      navigate("/auth");
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Unable to sign in.",
+        error instanceof Error ? error.message : "Unable to register.",
       );
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -28,34 +33,36 @@ export default function AuthPage() {
     <div className="mx-auto max-w-xl rounded-[2rem] border border-slate-200 bg-white/95 p-8 shadow-xl shadow-slate-900/5">
       <div className="space-y-3 text-center">
         <p className="text-sm uppercase tracking-[0.24em] text-teal-700">
-          PeakMind login
+          Create your PeakMind account
         </p>
         <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-          Sign in to your account
+          Register and get started
         </h1>
         <p className="text-slate-600">
-          Use your team credentials or professional email so we can connect you
-          to the right wellness workflows.
+          Set up your account with your professional email and join your team
+          wellness hub.
         </p>
       </div>
 
-      <LoginForm
+      <RegisterForm
+        name={name}
         email={email}
         password={password}
         isLoading={isLoading}
+        onNameChange={setName}
         onEmailChange={setEmail}
         onPasswordChange={setPassword}
         onSubmit={handleSubmit}
       />
 
       <p className="mt-6 text-center text-sm text-slate-600">
-        Don’t have an account?{" "}
-        <a
-          href="/auth/register"
+        Already have an account?{" "}
+        <Link
+          to="/auth"
           className="font-semibold text-teal-700 underline transition hover:text-teal-900"
         >
-          Register now
-        </a>
+          Sign in
+        </Link>
       </p>
     </div>
   );

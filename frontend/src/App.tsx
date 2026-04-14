@@ -4,7 +4,7 @@ import { Toaster } from "sonner";
 import { AuthProvider, useAuth } from "@/features/auth/hooks/useAuth";
 import Header from "@/shared/components/layout/Header";
 import { IndexPage } from "@/features/landing";
-import { AuthPage } from "@/features/auth";
+import { AuthPage, RegisterPage } from "@/features/auth";
 import { DashboardPage } from "@/features/dashboard";
 import { OrgDashboardPage } from "@/features/orgDashboard";
 import { CheckInPage, CheckInCompletePage } from "@/features/checkin";
@@ -51,6 +51,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<IndexPage />} />
                 <Route path="/auth" element={<AuthPage />} />
+                <Route path="/auth/register" element={<RegisterPage />} />
                 <Route
                   path="/dashboard"
                   element={

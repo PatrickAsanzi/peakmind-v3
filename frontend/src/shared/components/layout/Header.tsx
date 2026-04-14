@@ -79,7 +79,7 @@ export default function Header() {
             </>
           ) : (
             <Link
-              to="/auth"
+              to="/auth/register"
               className="inline-flex items-center justify-center rounded-full bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-600"
             >
               Get started
