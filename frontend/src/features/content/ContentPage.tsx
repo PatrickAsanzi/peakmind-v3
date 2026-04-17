@@ -1,15 +1,15 @@
 import { useMemo, useState } from "react";
 import { useContentRecommendations } from "./hooks/useContentRecommendations";
-import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
-import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "../../shared/components/ui/button";
+import { Input } from "../../shared/components/ui/input";
+import { Badge } from "../../shared/components/ui/badge";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/shared/components/ui/card";
+} from "../../shared/components/ui";
 
 export default function ContentPage() {
   const { data, isLoading, error } = useContentRecommendations();

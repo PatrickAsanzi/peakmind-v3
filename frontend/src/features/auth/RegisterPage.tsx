@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/shared/components/ui";
+} from "../../shared/components/ui";
 
 export default function RegisterPage() {
   const navigate = useNavigate();

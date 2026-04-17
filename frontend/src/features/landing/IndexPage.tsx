@@ -1,7 +1,7 @@
-import { CTASection } from "@/features/landing/components/CTASection";
-import { FeaturesSection } from "@/features/landing/components/FeaturesSection";
-import { Footer } from "@/features/landing/components/Footer";
-import { HeroSection } from "@/features/landing/components/HeroSection";
+import { CTASection } from "../../features/landing/components/CTASection";
+import { FeaturesSection } from "../..//features/landing/components/FeaturesSection";
+import { Footer } from "../../features/landing/components/Footer";
+import { HeroSection } from "../../features/landing/components/HeroSection";
 
 export default function IndexPage() {
   return (

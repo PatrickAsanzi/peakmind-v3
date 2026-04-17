@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { LogOut, ShieldCheck, Sparkles } from "lucide-react";
-import { useAuth } from "@/features/auth/hooks/useAuth";
-import { Button } from "@/shared/components/ui/button";
+import { useAuth } from "../../../features/auth/hooks/useAuth";
+import { Button } from "../../../shared/components/ui/button";
 
 export default function Header() {
   const { user, signOut } = useAuth();

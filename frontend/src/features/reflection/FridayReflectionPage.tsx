@@ -1,5 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { getFridayReflection, type ReflectionPrompt } from "@/shared/peakmind";
+import {
+  getFridayReflection,
+  type ReflectionPrompt,
+} from "../../shared/peakmind";
 
 export default function FridayReflectionPage() {
   const { data, isLoading, error } = useQuery<ReflectionPrompt, Error>({

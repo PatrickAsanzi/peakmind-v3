@@ -1,5 +1,5 @@
 import { forwardRef } from "react";
-import { cn } from "@/shared/utils";
+import { cn } from "../../../shared/utils";
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   variant?: "default" | "secondary" | "accent";

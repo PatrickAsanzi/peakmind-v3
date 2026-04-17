@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useAuth } from "../auth/hooks/useAuth";
 import { useCheckInPrompt } from "./hooks/useCheckInPrompt";
 import { useCompleteCheckIn } from "./hooks/useCompleteCheckIn";
 

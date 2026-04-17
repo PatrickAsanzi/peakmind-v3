@@ -1,16 +1,19 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getProfessionals, type ProfessionalProfile } from "@/shared/peakmind";
-import { Button } from "@/shared/components/ui/button";
+import {
+  getProfessionals,
+  type ProfessionalProfile,
+} from "../../shared/peakmind";
+import { Button } from "../../shared/components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/shared/components/ui/card";
-import { Input } from "@/shared/components/ui/input";
-import { Badge } from "@/shared/components/ui/badge";
+} from "../../shared/components/ui/card";
+import { Input } from "../../shared/components/ui/input";
+import { Badge } from "../../shared/components/ui/badge";
 
 export default function ProfessionalsPage() {
   const [searchQuery, setSearchQuery] = useState("");

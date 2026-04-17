@@ -1,22 +1,22 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
-import { AuthProvider, useAuth } from "@/features/auth/hooks/useAuth";
-import Header from "@/shared/components/layout/Header";
-import { IndexPage } from "@/features/landing";
-import { AuthPage, RegisterPage } from "@/features/auth";
-import { DashboardPage } from "@/features/dashboard";
-import { OrgDashboardPage } from "@/features/orgDashboard";
-import { CheckInPage, CheckInCompletePage } from "@/features/checkin";
-import { ContentPage } from "@/features/content";
-import { ConsentPage } from "@/features/consent";
-import { CommunityPage } from "@/features/community";
-import { DailyReadingPage } from "@/features/dailyReading";
-import { MorningMeditationPage } from "@/features/meditation";
-import { ProfessionalsPage } from "@/features/professionals";
-import { MyCalendarPage } from "@/features/calendar";
-import { FridayReflectionPage } from "@/features/reflection";
-import { NotFoundPage } from "@/features/notFound";
+import { AuthProvider, useAuth } from "./features/auth/hooks/useAuth";
+import Header from "./shared/components/layout/Header";
+import { IndexPage } from "./features/landing";
+import { AuthPage, RegisterPage } from "./features/auth";
+import { DashboardPage } from "./features/dashboard";
+import { OrgDashboardPage } from "./features/orgDashboard";
+import { CheckInPage, CheckInCompletePage } from "./features/checkin";
+import { ContentPage } from "./features/content";
+import { ConsentPage } from "./features/consent";
+import { CommunityPage } from "./features/community";
+import { DailyReadingPage } from "./features/dailyReading";
+import { MorningMeditationPage } from "./features/meditation";
+import { ProfessionalsPage } from "./features/professionals";
+import { MyCalendarPage } from "./features/calendar";
+import { FridayReflectionPage } from "./features/reflection";
+import { NotFoundPage } from "./features/notFound";
 
 const queryClient = new QueryClient();
 

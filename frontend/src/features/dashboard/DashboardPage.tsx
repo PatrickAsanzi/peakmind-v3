@@ -1,4 +1,4 @@
-import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useAuth } from "../auth/hooks/useAuth";
 
 const dashboardSummary = {
   checkInStreak: 4,
