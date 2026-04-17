@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { LogOut, ShieldCheck, Sparkles } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { Button } from "@/shared/components/ui/button";
 
 export default function Header() {
   const { user, signOut } = useAuth();
@@ -19,7 +20,7 @@ export default function Header() {
           </div>
         </Link>
 
-        <nav className="hidden items-center gap-6 md:flex">
+        <nav className="flex items-center gap-6 md:flex">
           <Link
             to="/"
             className="text-sm font-medium text-slate-700 hover:text-slate-900"
@@ -65,25 +66,26 @@ export default function Header() {
                 <ShieldCheck className="h-4 w-4 text-teal-600" />
                 <span>{user.name ?? user.email}</span>
               </div>
-              <button
+              <Button
                 type="button"
                 onClick={() => {
                   signOut();
                   navigate("/");
                 }}
-                className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+                className="inline-flex items-center gap-2"
               >
                 <LogOut className="h-4 w-4" />
                 Sign out
-              </button>
+              </Button>
             </>
           ) : (
-            <Link
-              to="/auth/register"
-              className="inline-flex items-center justify-center rounded-full bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-600"
+            <Button
+              type="button"
+              className="inline-flex items-center justify-center"
+              onClick={() => navigate("/auth/register")}
             >
               Get started
-            </Link>
+            </Button>
           )}
         </div>
       </div>

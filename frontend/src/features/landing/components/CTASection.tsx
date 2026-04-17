@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { Badge } from "@/shared/components/ui/badge";
+import { Card, CardContent } from "@/shared/components/ui/card";
 
 const benefits = [
   "Rapid onboarding for leaders and professionals",
@@ -23,22 +25,24 @@ export function CTASection() {
           </p>
         </div>
 
-        <div className="space-y-4 rounded-[2rem] bg-white/5 p-8 ring-1 ring-white/10">
-          {benefits.map((benefit) => (
-            <div
-              key={benefit}
-              className="rounded-3xl bg-slate-900/80 px-5 py-4"
+        <Card className="space-y-4 rounded-[2rem] bg-slate-950/95 p-8 ring-1 ring-white/10">
+          <CardContent className="space-y-4">
+            {benefits.map((benefit) => (
+              <div
+                key={benefit}
+                className="rounded-3xl bg-slate-900/80 px-5 py-4"
+              >
+                <p className="text-sm text-slate-200">{benefit}</p>
+              </div>
+            ))}
+            <Link
+              to="/auth/register"
+              className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-teal-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-teal-400"
             >
-              <p className="text-sm text-slate-200">{benefit}</p>
-            </div>
-          ))}
-          <Link
-            to="/auth"
-            className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-teal-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-teal-400"
-          >
-            Launch your pilot
-          </Link>
-        </div>
+              Launch your pilot
+            </Link>
+          </CardContent>
+        </Card>
       </div>
     </section>
   );

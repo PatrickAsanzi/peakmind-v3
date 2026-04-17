@@ -3,6 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useRegister } from "./hooks/useRegister";
 import RegisterForm from "./components/RegisterForm";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/shared/components/ui";
 
 export default function RegisterPage() {
   const navigate = useNavigate();

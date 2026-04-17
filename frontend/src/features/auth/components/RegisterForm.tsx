@@ -1,4 +1,6 @@
 import type { FormEvent } from "react";
+import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
 
 interface RegisterFormProps {
   name: string;
@@ -25,47 +27,40 @@ export default function RegisterForm({
     <form onSubmit={onSubmit} className="mt-10 space-y-6">
       <label className="block">
         <span className="text-sm font-medium text-slate-700">Name</span>
-        <input
+        <Input
           type="text"
           value={name}
           onChange={(event) => onNameChange(event.target.value)}
           required
           placeholder="Your full name"
-          className="mt-2 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
         />
       </label>
 
       <label className="block">
         <span className="text-sm font-medium text-slate-700">Email</span>
-        <input
+        <Input
           type="email"
           value={email}
           onChange={(event) => onEmailChange(event.target.value)}
           required
           placeholder="hello@peakmind.ai"
-          className="mt-2 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
         />
       </label>
 
       <label className="block">
         <span className="text-sm font-medium text-slate-700">Password</span>
-        <input
+        <Input
           type="password"
           value={password}
           onChange={(event) => onPasswordChange(event.target.value)}
           required
           placeholder="Create a password"
-          className="mt-2 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
         />
       </label>
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="inline-flex w-full items-center justify-center rounded-full bg-teal-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-teal-600 disabled:cursor-not-allowed disabled:opacity-70"
-      >
+      <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? "Creating account…" : "Create account"}
-      </button>
+      </Button>
     </form>
   );
 }

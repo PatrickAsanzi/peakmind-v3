@@ -1,5 +1,6 @@
-import { ArrowRight, Shield, TrendingUp, Users } from "lucide-react";
+import { ArrowRight, Shield, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Card, CardContent } from "@/shared/components/ui/card";
 
 export function HeroSection() {
   return (
@@ -22,7 +23,10 @@ export function HeroSection() {
             </p>
           </div>
           <div className="flex flex-col gap-4 sm:flex-row">
-            <Link to="/auth" className="button-primary">
+            <Link
+              to="/auth/register"
+              className="inline-flex items-center justify-center rounded-full bg-teal-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-teal-600"
+            >
               Start your free pilot
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
@@ -35,37 +39,41 @@ export function HeroSection() {
           </div>
         </div>
 
-        <div className="space-y-6 rounded-[2rem] bg-slate-950/95 p-8 text-white shadow-2xl shadow-slate-950/20 ring-1 ring-white/10">
-          <div className="flex items-center justify-between rounded-3xl bg-slate-900/90 p-5">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                Team engagement
+        <Card className="space-y-6 rounded-[2rem] bg-slate-950/95 p-8 text-white shadow-2xl shadow-slate-950/20 ring-1 ring-white/10">
+          <CardContent className="space-y-6 text-white">
+            <div className="flex items-center justify-between rounded-3xl bg-slate-900/90 p-5">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                  Team engagement
+                </p>
+                <p className="mt-3 text-2xl font-semibold">+38%</p>
+              </div>
+              <div className="rounded-3xl bg-teal-500/15 p-3 text-teal-300">
+                <Users className="h-5 w-5" />
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-3xl bg-slate-900/80 p-5">
+                <p className="text-sm text-slate-400">Weekly focus sessions</p>
+                <p className="mt-3 text-xl font-semibold">Guided check-ins</p>
+              </div>
+              <div className="rounded-3xl bg-slate-900/80 p-5">
+                <p className="text-sm text-slate-400">Psychological safety</p>
+                <p className="mt-3 text-xl font-semibold">
+                  Confidential support
+                </p>
+              </div>
+            </div>
+            <div className="rounded-3xl bg-slate-900/80 p-5">
+              <p className="text-sm uppercase tracking-[0.28em] text-slate-500">
+                PeakMind impact
               </p>
-              <p className="mt-3 text-2xl font-semibold">+38%</p>
+              <p className="mt-3 text-3xl font-semibold">
+                Powerful support for emotional wellbeing.
+              </p>
             </div>
-            <div className="rounded-3xl bg-teal-500/15 p-3 text-teal-300">
-              <Users className="h-5 w-5" />
-            </div>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-3xl bg-slate-900/80 p-5">
-              <p className="text-sm text-slate-400">Weekly focus sessions</p>
-              <p className="mt-3 text-xl font-semibold">Guided check-ins</p>
-            </div>
-            <div className="rounded-3xl bg-slate-900/80 p-5">
-              <p className="text-sm text-slate-400">Psychological safety</p>
-              <p className="mt-3 text-xl font-semibold">Confidential support</p>
-            </div>
-          </div>
-          <div className="rounded-3xl bg-slate-900/80 p-5">
-            <p className="text-sm uppercase tracking-[0.28em] text-slate-500">
-              PeakMind impact
-            </p>
-            <p className="mt-3 text-3xl font-semibold">
-              Powerful support for emotional wellbeing.
-            </p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </section>
   );

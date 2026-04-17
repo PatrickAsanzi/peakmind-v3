@@ -3,6 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useLogin } from "./hooks/useLogin";
 import LoginForm from "./components/LoginForm";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/shared/components/ui";
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -50,12 +57,12 @@ export default function AuthPage() {
 
       <p className="mt-6 text-center text-sm text-slate-600">
         Don’t have an account?{" "}
-        <a
-          href="/auth/register"
+        <Link
+          to="/auth/register"
           className="font-semibold text-teal-700 underline transition hover:text-teal-900"
         >
           Register now
-        </a>
+        </Link>
       </p>
     </div>
   );
