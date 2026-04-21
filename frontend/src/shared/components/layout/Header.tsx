@@ -21,12 +21,14 @@ export default function Header() {
         </Link>
 
         <nav className="flex items-center gap-6 md:flex">
-          <Link
-            to="/"
-            className="text-sm font-medium text-slate-700 hover:text-slate-900"
-          >
-            Home
-          </Link>
+          {!user ? (
+            <Link
+              to="/"
+              className="text-sm font-medium text-slate-700 hover:text-slate-900"
+            >
+              Home
+            </Link>
+          ) : null}
           <Link
             to="/dashboard"
             className="text-sm font-medium text-slate-700 hover:text-slate-900"

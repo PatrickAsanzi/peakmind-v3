@@ -1,6 +1,6 @@
 import type { FormEvent } from "react";
-import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
+import { Button } from "../../../shared/components/ui/button";
+import { Input } from "../../../shared/components/ui/input";
 
 interface RegisterFormProps {
   name: string;

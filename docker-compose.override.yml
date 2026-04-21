@@ -1,4 +1,30 @@
 services:
+  backend:
+    build:
+      target: dev
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+      - /app/bin
+      - /app/obj
+    ports:
+      - "5000:80"
+      - "4711:4711"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
+      VSDBG_LOG_DIR: /vsdbg
+      VSDBG_LOG_LEVEL: Warning
+      COMPLUS_DebugWriteHeapDump: 1
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: peakmind
+      POSTGRES_PASSWORD: peakmind_pass
+      POSTGRES_DB: peakminddb
+    depends_on:
+      - postgres
+
   frontend:
     build:
       target: dev

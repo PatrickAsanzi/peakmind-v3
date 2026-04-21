@@ -1,69 +1,172 @@
 ﻿# PeakMind
 
-PeakMind is a .NET 10 Minimal API project organized with a vertical-slice architecture. It uses MediatR for request handling, FluentValidation for input validation, and EF Core (Npgsql) with ASP.NET Core Identity for authentication (JWT tokens).
+PeakMind is a .NET 10 Minimal API project organized with a vertical-slice architecture. It uses MediatR for request handling, FluentValidation for input validation, and EF Core (Npgsql) with ASP.NET Core Identity for JWT-based authentication.
 
-Repository layout (relevant parts)
-- backend/ — .NET 10 API (Identity, EF Core, MediatR, FluentValidation)
-- frontend/ — (optional) frontend app
-- docker-compose.yml — local Docker services (postgres, backend, frontend)
+---
 
-Prerequisites
-- .NET 10 SDK (dotnet --info)
-- Docker Desktop (for Postgres container)
-- dotnet-ef tool (optional for creating migrations locally):
+## Repository Layout
+
+```
+backend/          .NET 10 API (Identity, EF Core, MediatR, FluentValidation)
+frontend/         React + Vite frontend
+docker-compose.yml                base Docker services (postgres, backend, frontend)
+docker-compose.override.yml       dev overrides (hot reload, vsdbg, source mounts)
+```
+
+---
+
+## Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download) — verify with `dotnet --info`
+- [Docker Desktop](https://www.docker.com/products/docker-desktop)
+- `dotnet-ef` tool (only needed if creating migrations locally):
   ```powershell
   dotnet tool install --global dotnet-ef
   ```
 
-Local development using Docker (recommended)
-1. Start Postgres container only (from repo root):
+---
+
+## Running the Dev Stack
+
+Start the full stack from the repo root:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.override.yml up --build -d
+```
+
+The services are exposed at:
+
+| Service  | URL / Address         |
+| -------- | --------------------- |
+| Frontend | http://localhost:4173 |
+| Backend  | http://localhost:5000 |
+| Postgres | localhost:5432        |
+
+The backend runs in `dotnet watch` mode so code changes reload automatically without restarting the container.
+
+To stop the stack:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.override.yml down
+```
+
+---
+
+## Migrations
+
+The initial migration is already generated under `backend/Migrations`. The backend calls `Database.Migrate()` with retries at startup so migrations are applied automatically when the container starts.
+
+To create a new migration locally (requires Postgres running):
+
+```powershell
+# 1. Start only Postgres
+docker compose up -d postgres
+
+# 2. Create the migration
+dotnet ef migrations add <MigrationName> -p backend -s backend
+
+# 3. Apply it manually if needed (migrations also run automatically on startup)
+dotnet ef database update -p backend -s backend \
+  --connection "Host=localhost;Port=5432;Database=peakminddb;Username=peakmind;Password=peakmind_pass"
+```
+
+To reset the database and volume:
+
+```powershell
+docker compose down -v
+docker compose -f docker-compose.yml -f docker-compose.override.yml up -d postgres
+```
+
+> **Note:** If you change Postgres credentials after the volume has been initialized you must remove the volume using the commands above to reinitialize the DB.
+
+---
+
+## Debugging (VS Code)
+
+Full stack debugging is supported for both the frontend and backend simultaneously using VS Code.
+
+### Prerequisites
+
+Make sure you have these VS Code extensions installed:
+
+- **C# Dev Kit** — `ms-dotnettools.csdevkit`
+- **Docker** — `ms-azuretools.vscode-docker`
+- **JavaScript Debugger** — built in, confirm it is not disabled
+
+### Steps
+
+1. Start the stack (see above) and confirm all three containers are running:
+
    ```powershell
-   docker compose up -d postgres
-   docker compose logs -f postgres
-   ```
-   Wait for the log entry: "database system is ready to accept connections".
-
-2. Create migrations (if needed) from the host:
-   ```powershell
-   dotnet restore
-   dotnet ef migrations add InitialCreate -p backend -s backend
+   docker ps
    ```
 
-3. Apply migrations to the running Postgres (host):
-   ```powershell
-   dotnet ef database update -p backend -s backend --connection "Host=localhost;Port=5432;Database=peakminddb;Username=peakmind;Password=peakmind_pass"
+2. Set breakpoints in any `.cs` file for the backend or any `.tsx` / `.ts` file for the frontend.
+
+3. Open the **Run and Debug** panel (`Ctrl+Shift+D`), select **Full Stack Debug** from the dropdown, and hit **F5**.
+
+4. When the process picker appears for the backend select the process matching:
+
+   ```
+   /app/bin/Debug/net10.0/backend
    ```
 
-4. Start backend and frontend containers:
-   ```powershell
-   docker compose up -d backend frontend
-   docker compose logs -f backend
-   ```
+   Do not select the `dotnet watch` or `VBCSCompiler` processes.
 
-Notes
-- The docker-compose file sets Postgres credentials via environment variables. If you change credentials after the Postgres volume has been initialized, you must remove the volume to reinitialize the DB:
-  ```powershell
-  docker compose down -v
-  docker compose up -d postgres
-  ```
-- The backend contains a startup routine that calls Database.Migrate() with retries so the app will attempt to apply migrations at container startup.
+5. Chrome will open automatically at `http://localhost:4173`.
 
-Configuration
-- Edit `backend/appsettings.json` to set DefaultConnection and Jwt settings (Key, Issuer, Audience). Use a strong, secret Jwt:Key in production.
+### Stopping
 
-Authentication endpoints
-- POST /auth/register — register a new user (email, password, name)
-- POST /auth/login — returns a JWT token
+Hit `Shift+F5` to detach both debuggers at once. This does not stop the containers — run the down command above when you are fully done.
 
-Migrations
-- The initial migration has been generated and is located under `backend/Migrations`.
+### Troubleshooting
 
-Development tips
-- Open the solution in Visual Studio 2026, restore NuGet packages, build, and run.
-- If you need an admin user seeded at startup, I can add a simple seeder service.
+| Symptom                                     | Fix                                                                             |
+| ------------------------------------------- | ------------------------------------------------------------------------------- |
+| **Waiting for preLaunchTask** popup appears | Click **Debug Anyway** — safe when the stack is already running                 |
+| Backend breakpoints show as hollow circles  | Source map mismatch — confirm `WORKDIR` in the backend Dockerfile is `/app`     |
+| Breakpoints stop hitting after a file save  | `dotnet watch` restarted the process and the PID changed — hit `F5` to reattach |
+| vsdbg missing in container                  | Run `docker exec -it peakmind-v3-backend-1 ls /vsdbg` to verify install         |
 
-Support
-- Ask for changes: create a seeder, add refresh tokens, or produce a Postman collection.
+---
 
-License: MIT
+## Configuration
 
+Edit `backend/appsettings.json` to configure:
+
+- `DefaultConnection` — Postgres connection string
+- `Jwt:Key` — signing key (use a strong secret in production)
+- `Jwt:Issuer` — token issuer
+- `Jwt:Audience` — token audience
+
+---
+
+## Authentication Endpoints
+
+| Method | Endpoint         | Description                                 |
+| ------ | ---------------- | ------------------------------------------- |
+| POST   | `/auth/register` | Register a new user (email, password, name) |
+| POST   | `/auth/login`    | Returns a JWT token                         |
+
+---
+
+## Development Tips
+
+- Always use the Docker + VS Code flow described above rather than running the backend directly on the host — this ensures the database connection and environment variables match.
+- If you need an admin user seeded at startup a simple seeder service can be added on request.
+
+---
+
+## Support
+
+Available additions on request:
+
+- Database seeder
+- Refresh tokens
+- Postman collection
+
+---
+
+## License
+
+MIT

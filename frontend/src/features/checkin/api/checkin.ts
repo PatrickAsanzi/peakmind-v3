@@ -1,11 +1,11 @@
-import { apiFetch } from "@/shared/api";
+import { apiFetch } from "../../../shared/api";
 import type { CompleteCheckInPayload } from "../types";
 
 export function getCheckInPrompt() {
   return Promise.resolve({
     prompt:
       "Choose the mood that best describes how you feel right now, then add any note that will help your guide support you today.",
-    moodOptions: ["Calm", "Stressed", "Motivated", "Overwhelmed"],
+    moodOptions: ["😌", "😟", "🔥", "😵"],
   });
 }
 

@@ -1,0 +1,39 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Docker: Attach to Backend",
+      "type": "coreclr",
+      "request": "attach",
+      "processId": "${command:pickRemoteProcess}",
+      "pipeTransport": {
+        "pipeProgram": "docker",
+        "pipeArgs": ["exec", "-i", "your-backend-container-name"],
+        "debuggerPath": "/vsdbg/vsdbg",
+        "pipeCwd": "${workspaceFolder}"
+      },
+      "sourceFileMap": {
+        "/app": "${workspaceFolder}/backend"
+      }
+    },
+    {
+      "name": "Docker: Launch & Debug Backend",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "docker-compose-up",
+      "program": "/app/backend.dll", // adjust to your actual output dll name
+      "args": [],
+      "cwd": "/app",
+      "stopAtEntry": false,
+      "pipeTransport": {
+        "pipeProgram": "docker",
+        "pipeArgs": ["exec", "-i", "backend-1"],
+        "debuggerPath": "/vsdbg/vsdbg",
+        "pipeCwd": "${workspaceFolder}"
+      },
+      "sourceFileMap": {
+        "/app": "${workspaceFolder}/backend"
+      }
+    }
+  ]
+}
