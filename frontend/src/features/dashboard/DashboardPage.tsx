@@ -23,21 +23,8 @@ import {
 } from "date-fns";
 import { useAuth } from "../auth/hooks/useAuth";
 import { apiFetch } from "../../shared/api";
-
-interface RecentCheckIn {
-  id: string;
-  userId: string;
-  notes: string;
-  createdAt: string;
-}
-
-interface ParsedCheckIn extends RecentCheckIn {
-  createdAtDate: Date;
-  mood: string | null;
-  note: string | null;
-  energyScore: number | null;
-  stressScore: number | null;
-}
+import type { ParsedCheckIn } from "../dashboard/types";
+import { getUserCheckIns } from "../checkin/api/checkin";
 
 const moodScores: Record<string, number> = {
   calm: 4,
@@ -150,8 +137,7 @@ export default function DashboardPage() {
 
   const recentCheckInsQuery = useQuery({
     queryKey: ["recent-checkins", user?.id],
-    queryFn: () =>
-      apiFetch<RecentCheckIn[]>(`/checkins/user/${user?.id}?days=14`),
+    queryFn: () => getUserCheckIns(user!.id, 14),
     enabled: Boolean(user?.id),
   });
 
@@ -172,7 +158,9 @@ export default function DashboardPage() {
       .filter((item) => !Number.isNaN(item.createdAtDate.getTime()));
   }, [recentCheckInsQuery.data]);
 
-  const todayCheckIn = parsedCheckIns.find((item) => isToday(item.createdAtDate));
+  const todayCheckIn = parsedCheckIns.find((item) =>
+    isToday(item.createdAtDate),
+  );
   const latestCheckIn = parsedCheckIns[0] ?? null;
 
   const metrics = useMemo(() => {
@@ -207,7 +195,9 @@ export default function DashboardPage() {
     }
 
     const uniqueDays = Array.from(
-      new Set(parsedCheckIns.map((item) => format(item.createdAtDate, "yyyy-MM-dd"))),
+      new Set(
+        parsedCheckIns.map((item) => format(item.createdAtDate, "yyyy-MM-dd")),
+      ),
     ).map((value) => parseISO(`${value}T00:00:00`));
 
     let currentStreak = 0;
@@ -246,8 +236,8 @@ export default function DashboardPage() {
                 Welcome back, {firstName}
               </h1>
               <p className="mt-3 max-w-xl text-sm text-white/85 sm:text-base">
-                Track how you have been feeling, review recent patterns, and take
-                one small action to support your day.
+                Track how you have been feeling, review recent patterns, and
+                take one small action to support your day.
               </p>
             </div>
 
@@ -316,8 +306,8 @@ export default function DashboardPage() {
                 You're checked in
               </p>
               <p className="mt-2 text-sm text-slate-700">
-                You already completed today's reflection. Come back later if
-                you want to review your recent notes.
+                You already completed today's reflection. You can now review
+                your recent check-ins.
               </p>
             </div>
           </div>
@@ -361,7 +351,11 @@ export default function DashboardPage() {
           <p className="mt-2 text-sm text-slate-600">
             {describeScore(
               metrics.averageEnergy,
-              ["Energy seems strong", "Energy looks mixed", "Energy may be running low"],
+              [
+                "Energy seems strong",
+                "Energy looks mixed",
+                "Energy may be running low",
+              ],
               "We estimate energy from mood and note keywords when available.",
             )}
           </p>
@@ -402,13 +396,19 @@ export default function DashboardPage() {
                 Your latest reflections
               </h2>
             </div>
-            <Link
-              to="/check-in"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-teal-700 hover:text-teal-800"
-            >
-              New check-in
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+            {todayCheckIn ? (
+              <span className="text-sm text-muted-foreground">
+                ✅ Today's check-in completed
+              </span>
+            ) : (
+              <Link
+                to="/check-in"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-teal-700 hover:text-teal-800"
+              >
+                New check-in
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            )}
           </div>
 
           <div className="mt-6">
@@ -440,19 +440,25 @@ export default function DashboardPage() {
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <p className="text-sm font-semibold text-slate-900">
-                          {checkIn.mood ? `Mood: ${checkIn.mood}` : "Daily reflection"}
+                          {checkIn.mood
+                            ? `Mood: ${checkIn.mood}`
+                            : "Daily reflection"}
                         </p>
                         <p className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-400">
                           {format(checkIn.createdAtDate, "EEEE, MMM d")}
                         </p>
                       </div>
                       <span className="inline-flex w-fit items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-                        {formatDistanceToNow(checkIn.createdAtDate, { addSuffix: true })}
+                        {formatDistanceToNow(checkIn.createdAtDate, {
+                          addSuffix: true,
+                        })}
                       </span>
                     </div>
 
                     <p className="mt-4 text-sm leading-6 text-slate-600">
-                      {checkIn.note ?? checkIn.notes ?? "No additional notes provided."}
+                      {checkIn.note ??
+                        checkIn.notes ??
+                        "No additional notes provided."}
                     </p>
                   </article>
                 ))}
@@ -533,7 +539,9 @@ export default function DashboardPage() {
                 <div className="flex items-start gap-3">
                   <HeartPulse className="mt-0.5 h-5 w-5 text-rose-500" />
                   <div>
-                    <p className="font-medium text-slate-900">Reset suggestion</p>
+                    <p className="font-medium text-slate-900">
+                      Reset suggestion
+                    </p>
                     <p className="mt-1 text-sm text-slate-600">
                       If stress feels high, take a three-minute pause for slow
                       breathing or a short walk before your next task.

@@ -1,4 +1,4 @@
-import { apiFetch } from "@/shared/api";
+import { apiFetch } from "../shared/api";
 
 export interface UserProfile {
   id: string;

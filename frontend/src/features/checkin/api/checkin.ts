@@ -1,5 +1,6 @@
 import { apiFetch } from "../../../shared/api";
 import type { CompleteCheckInPayload } from "../types";
+import type { RecentCheckIn } from "../types";
 
 export function getCheckInPrompt() {
   return Promise.resolve({
@@ -22,4 +23,9 @@ export async function completeCheckIn(payload: CompleteCheckInPayload) {
     notes: `Mood: ${payload.mood}${payload.note ? `\nNote: ${payload.note}` : ""}`,
   });
   return { success: true, nextPath: "/dashboard" };
+}
+
+export function getUserCheckIns(userId: string, days?: number) {
+  const params = days ? `?days=${days}` : "";
+  return apiFetch<RecentCheckIn[]>(`/checkins/user/${userId}${params}`);
 }

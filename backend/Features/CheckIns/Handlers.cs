@@ -5,12 +5,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Features.CheckIns;
 
-public class CreateCheckInCommandHandler : IRequestHandler<CreateCheckInCommand, Guid>
+public class CreateCheckInCommandHandler(PeakMindDbContext _db)
+: IRequestHandler<CreateCheckInCommand, Guid>
 {
-    private readonly PeakMindDbContext _db;
-    public CreateCheckInCommandHandler(PeakMindDbContext db) => _db = db;
-
-    public async Task<Guid> Handle(CreateCheckInCommand request, CancellationToken cancellationToken)
+    public async Task<Guid> Handle(
+        CreateCheckInCommand request,
+        CancellationToken cancellationToken)
     {
         var entry = new CheckIn { Id = Guid.NewGuid(), UserId = request.UserId, Notes = request.Notes };
         _db.CheckIns.Add(entry);
@@ -19,13 +19,36 @@ public class CreateCheckInCommandHandler : IRequestHandler<CreateCheckInCommand,
     }
 }
 
-public class GetCheckInByIdHandler : IRequestHandler<GetCheckInByIdQuery, CheckIn?>
+public class GetCheckInByIdHandler(PeakMindDbContext _db)
+: IRequestHandler<GetCheckInByIdQuery, CheckIn?>
 {
-    private readonly PeakMindDbContext _db;
-    public GetCheckInByIdHandler(PeakMindDbContext db) => _db = db;
-
-    public async Task<CheckIn?> Handle(GetCheckInByIdQuery request, CancellationToken cancellationToken)
+    public async Task<CheckIn?> Handle(
+        GetCheckInByIdQuery request,
+        CancellationToken cancellationToken)
     {
         return await _db.CheckIns.FirstOrDefaultAsync(c => c.Id == request.Id, cancellationToken);
+    }
+}
+
+public class GetUserCheckInsHandler(PeakMindDbContext _db)
+    : IRequestHandler<GetUserCheckInsQuery, List<CheckIn>>
+{
+    public async Task<List<CheckIn>> Handle(
+        GetUserCheckInsQuery request,
+        CancellationToken cancellationToken)
+    {
+        var query = _db.CheckIns
+            .Where(x => x.UserId == request.UserId);
+
+        if (request.Days.HasValue)
+        {
+            var fromDate = DateTime.UtcNow.AddDays(-request.Days.Value);
+
+            query = query.Where(x => x.CreatedAt >= fromDate);
+        }
+
+        return await query
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
     }
 }

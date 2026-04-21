@@ -8,3 +8,16 @@ export interface CompleteCheckInPayload {
   note: string;
   userId: string;
 }
+
+export interface CheckIn {
+  id: string;
+  userId: string;
+  notes: string;
+  createdAt: string;
+}
+export interface RecentCheckIn {
+  id: string;
+  userId: string;
+  notes: string;
+  createdAt: string;
+}
