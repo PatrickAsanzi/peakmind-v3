@@ -1,6 +1,6 @@
-import type { RecentCheckIn } from "../checkin/types";
+import type { CheckInDto } from "../checkin/types";
 
-export interface ParsedCheckIn extends RecentCheckIn {
+export interface ParsedCheckIn extends Omit<CheckInDto, "createdAt"> {
   createdAtDate: Date;
   mood: string | null;
   note: string | null;

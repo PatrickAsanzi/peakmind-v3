@@ -10,6 +10,7 @@ export interface UserProfile {
 export interface CheckIn {
   id: string;
   userId: string;
+  mood: string;
   notes: string;
   createdAt: string;
 }
@@ -116,7 +117,11 @@ export interface LeadershipFeedback {
   createdAt: string;
 }
 
-export function createCheckIn(payload: { userId: string; notes: string }) {
+export function createCheckIn(payload: {
+  userId: string;
+  mood: string;
+  notes: string;
+}) {
   return apiFetch<string>("/checkins", {
     method: "POST",
     body: JSON.stringify(payload),
@@ -142,7 +147,8 @@ export async function completeCheckIn(payload: {
 }) {
   await createCheckIn({
     userId: payload.userId,
-    notes: `Mood: ${payload.mood}${payload.note ? `\nNote: ${payload.note}` : ""}`,
+    mood: payload.mood,
+    notes: payload.note,
   });
   return { success: true, nextPath: "/dashboard" };
 }

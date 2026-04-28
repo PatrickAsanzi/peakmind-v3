@@ -81,13 +81,21 @@ export default function Header() {
               </Button>
             </>
           ) : (
-            <Button
-              type="button"
-              className="inline-flex items-center justify-center"
-              onClick={() => navigate("/auth/register")}
-            >
-              Get started
-            </Button>
+            <div className="flex items-center gap-4">
+              <Link
+                to="/auth"
+                className="text-sm font-semibold text-teal-700 transition hover:text-teal-600"
+              >
+                Login
+              </Link>
+              <Button
+                type="button"
+                className="inline-flex items-center justify-center"
+                onClick={() => navigate("/auth/register")}
+              >
+                Get started
+              </Button>
+            </div>
           )}
         </div>
       </div>

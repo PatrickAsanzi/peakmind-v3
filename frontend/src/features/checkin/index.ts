@@ -1,2 +1,2 @@
-export { default as CheckInPage } from "./CheckInPage";
-export { default as CheckInCompletePage } from "./CheckInCompletePage";
+export { default as CheckInPage } from "./components/CheckInPage";
+export { default as CheckInCompletePage } from "./components/CheckInCompletePage";

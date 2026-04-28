@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Shared.Infrastructure;
@@ -11,9 +12,11 @@ using Shared.Infrastructure;
 namespace backend.Migrations
 {
     [DbContext(typeof(PeakMindDbContext))]
-    partial class PeakMindDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260421184031_AddMoodToCheckIn")]
+    partial class AddMoodToCheckIn
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -210,6 +213,10 @@ namespace backend.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Mood")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Notes")
                         .IsRequired()
                         .HasColumnType("text");
@@ -220,53 +227,6 @@ namespace backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("CheckIns");
-                });
-
-            modelBuilder.Entity("Shared.Infrastructure.Entities.CheckInQuestion", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string[]>("Emojis")
-                        .IsRequired()
-                        .HasColumnType("text[]");
-
-                    b.Property<bool>("Inverse")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Key")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string[]>("Labels")
-                        .IsRequired()
-                        .HasColumnType("text[]");
-
-                    b.Property<bool>("Optional")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("Order")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("CheckInQuestions");
                 });
 
             modelBuilder.Entity("Shared.Infrastructure.Entities.Community", b =>
@@ -432,33 +392,6 @@ namespace backend.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("backend.Shared.Infrastructure.Entities.CheckInResponse", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CheckInId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Emoji")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Key")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("Value")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CheckInId");
-
-                    b.ToTable("CheckInResponses");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
@@ -508,22 +441,6 @@ namespace backend.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("backend.Shared.Infrastructure.Entities.CheckInResponse", b =>
-                {
-                    b.HasOne("Shared.Infrastructure.Entities.CheckIn", "CheckIn")
-                        .WithMany("Responses")
-                        .HasForeignKey("CheckInId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CheckIn");
-                });
-
-            modelBuilder.Entity("Shared.Infrastructure.Entities.CheckIn", b =>
-                {
-                    b.Navigation("Responses");
                 });
 #pragma warning restore 612, 618
         }

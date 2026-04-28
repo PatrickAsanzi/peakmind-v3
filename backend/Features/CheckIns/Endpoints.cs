@@ -1,3 +1,4 @@
+using backend.Features.CheckIns;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,9 +12,9 @@ public static class CheckInsEndpoints
 
         group.MapPost("/", async (
             IMediator mediator,
-            CreateCheckInCommand cmd) =>
+             CreateCheckInDto dto) =>
         {
-            var id = await mediator.Send(cmd);
+            var id = await mediator.Send(new CreateCheckInCommand(dto.UserId, dto.Notes, dto.Responses));
             return Results.Created($"/checkins/{id}", id);
         });
 
@@ -35,6 +36,15 @@ public static class CheckInsEndpoints
             );
 
             return Results.Ok(result);
+        });
+
+        group.MapPut("/{id}", async (
+            Guid id,
+            CreateCheckInDto dto,
+            IMediator mediator) =>
+        {
+            var updated = await mediator.Send(new UpdateCheckInCommand(id, dto));
+            return updated ? Results.NoContent() : Results.NotFound();
         });
     }
 }

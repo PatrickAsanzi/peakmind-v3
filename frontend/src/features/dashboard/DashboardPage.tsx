@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -22,9 +22,22 @@ import {
   subDays,
 } from "date-fns";
 import { useAuth } from "../auth/hooks/useAuth";
-import { apiFetch } from "../../shared/api";
+import DetailModal from "./DetailModal";
+import { useCheckInQuestions } from "../checkin/hooks/useCheckInQuestions";
+import { getDashboardMetric } from "./api/dashboard";
 import type { ParsedCheckIn } from "../dashboard/types";
+import type { CheckInDto, CheckInResponseDto } from "../checkin/types";
+import { updateCheckIn } from "../checkin/api/checkin";
 import { getUserCheckIns } from "../checkin/api/checkin";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "../../shared/components/ui/card";
+import { Button } from "../../shared/components/ui/button";
+import { Slider } from "../checkin/components/ChekinSlider";
 
 const moodScores: Record<string, number> = {
   calm: 4,
@@ -39,66 +52,6 @@ const moodScores: Record<string, number> = {
   overwhelmed: 1,
   sad: 1,
 };
-
-const energyKeywords: Record<string, number> = {
-  energized: 5,
-  energetic: 5,
-  motivated: 4,
-  focused: 4,
-  productive: 4,
-  okay: 3,
-  tired: 2,
-  exhausted: 1,
-  drained: 1,
-  fatigued: 1,
-};
-
-const stressKeywords: Record<string, number> = {
-  calm: 1,
-  grounded: 1,
-  relaxed: 1,
-  okay: 2,
-  focused: 2,
-  anxious: 4,
-  stressed: 5,
-  overwhelmed: 5,
-  burnt: 5,
-  burned: 5,
-};
-
-function parseCheckInNotes(notes: string) {
-  const moodMatch = notes.match(/Mood:\s*(.+)/i);
-  const noteMatch = notes.match(/Note:\s*([\s\S]+)/i);
-
-  const mood = moodMatch?.[1]?.trim() ?? null;
-  const note = noteMatch?.[1]?.trim() ?? null;
-  const normalizedText = `${mood ?? ""} ${note ?? ""} ${notes}`.toLowerCase();
-
-  const energyScore = getKeywordScore(normalizedText, energyKeywords);
-  const stressScore = getKeywordScore(normalizedText, stressKeywords);
-
-  return {
-    mood,
-    note,
-    energyScore,
-    stressScore,
-  };
-}
-
-function getKeywordScore(
-  text: string,
-  scoreMap: Record<string, number>,
-): number | null {
-  const matches = Object.entries(scoreMap)
-    .filter(([keyword]) => text.includes(keyword))
-    .map(([, score]) => score);
-
-  if (!matches.length) {
-    return null;
-  }
-
-  return average(matches);
-}
 
 function average(values: number[]) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
@@ -134,6 +87,7 @@ function describeScore(
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { data: checkInQuestions } = useCheckInQuestions();
 
   const recentCheckInsQuery = useQuery({
     queryKey: ["recent-checkins", user?.id],
@@ -142,52 +96,117 @@ export default function DashboardPage() {
   });
 
   const parsedCheckIns = useMemo<ParsedCheckIn[]>(() => {
-    const items = recentCheckInsQuery.data ?? [];
+    const items: CheckInDto[] = recentCheckInsQuery.data ?? [];
 
     return items
       .map((item) => {
         const createdAtDate = parseISO(item.createdAt);
-        const parsed = parseCheckInNotes(item.notes ?? "");
+
+        const getResponse = (key: string) =>
+          item.responses?.find((r) => r.key === key) as
+            | CheckInResponseDto
+            | undefined;
+
+        const moodResp = getResponse("mood");
+        const energyResp = getResponse("energy");
+        const stressResp = getResponse("stress");
 
         return {
           ...item,
           createdAtDate,
-          ...parsed,
+          mood: moodResp ? moodResp.emoji || String(moodResp.value) : null,
+          note: item.notes ?? null,
+          energyScore: energyResp ? energyResp.value : null,
+          stressScore: stressResp ? stressResp.value : null,
         };
       })
       .filter((item) => !Number.isNaN(item.createdAtDate.getTime()));
   }, [recentCheckInsQuery.data]);
+
+  const [selectedCheckIn, setSelectedCheckIn] = useState<CheckInDto | null>(
+    null,
+  );
+  const [editingResponses, setEditingResponses] = useState<
+    Record<string, number>
+  >({});
+  const [editingNotes, setEditingNotes] = useState<string>("");
+
+  const openCheckIn = (item: CheckInDto) => {
+    setSelectedCheckIn(item);
+    const initial: Record<string, number> = {};
+    item.responses?.forEach((r) => (initial[r.key] = r.value));
+    setEditingResponses(initial);
+    setEditingNotes(item.notes ?? "");
+  };
+
+  const closeCheckIn = () => {
+    setSelectedCheckIn(null);
+    setEditingResponses({});
+    setEditingNotes("");
+  };
+
+  const saveCheckIn = async () => {
+    if (!selectedCheckIn || !user) return;
+    // Build DTO — compute emoji from question options based on updated value
+    // fall back to existing response emoji when question options are unavailable
+    const dto = {
+      userId: user.id,
+      notes: editingNotes,
+      responses: Object.entries(editingResponses).map(([key, value]) => {
+        const question = checkInQuestions?.find((q) => q.key === key);
+        const emojiFromQuestion = question?.emojis?.[Math.max(0, value - 1)];
+        const existingEmoji =
+          selectedCheckIn.responses.find((r) => r.key === key)?.emoji ?? "";
+        return {
+          key,
+          emoji: emojiFromQuestion ?? existingEmoji,
+          value,
+        };
+      }),
+    };
+
+    try {
+      const success = await updateCheckIn(selectedCheckIn.id, dto);
+
+      if (success) {
+        window.location.reload();
+      } else {
+        alert("Update failed");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update check-in");
+    }
+  };
 
   const todayCheckIn = parsedCheckIns.find((item) =>
     isToday(item.createdAtDate),
   );
   const latestCheckIn = parsedCheckIns[0] ?? null;
 
-  const metrics = useMemo(() => {
-    const moodValues = parsedCheckIns
-      .map((item) => {
-        if (!item.mood) {
-          return null;
-        }
+  const moodMetricQuery = useQuery({
+    queryKey: ["dashboard-metric", user?.id, "mood"],
+    queryFn: () => getDashboardMetric(user!.id, "mood"),
+    enabled: Boolean(user?.id),
+  });
 
-        return moodScores[item.mood.toLowerCase()] ?? null;
-      })
-      .filter((value): value is number => value !== null);
+  const energyMetricQuery = useQuery({
+    queryKey: ["dashboard-metric", user?.id, "energy"],
+    queryFn: () => getDashboardMetric(user!.id, "energy"),
+    enabled: Boolean(user?.id),
+  });
 
-    const energyValues = parsedCheckIns
-      .map((item) => item.energyScore)
-      .filter((value): value is number => value !== null);
+  const stressMetricQuery = useQuery({
+    queryKey: ["dashboard-metric", user?.id, "stress"],
+    queryFn: () => getDashboardMetric(user!.id, "stress"),
+    enabled: Boolean(user?.id),
+  });
 
-    const stressValues = parsedCheckIns
-      .map((item) => item.stressScore)
-      .filter((value): value is number => value !== null);
-
-    return {
-      averageMood: moodValues.length ? average(moodValues) : null,
-      averageEnergy: energyValues.length ? average(energyValues) : null,
-      averageStress: stressValues.length ? average(stressValues) : null,
-    };
-  }, [parsedCheckIns]);
+  const metrics = {
+    averageMood: moodMetricQuery.data?.average ?? null,
+    averageEnergy: energyMetricQuery.data?.average ?? null,
+    averageStress: stressMetricQuery.data?.average ?? null,
+  };
 
   const streak = useMemo(() => {
     if (!parsedCheckIns.length) {
@@ -219,6 +238,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      {/* Hero banner — kept as a raw div since it has a custom gradient header treatment that Card doesn't model */}
       <motion.section
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
@@ -267,38 +287,39 @@ export default function DashboardPage() {
         </div>
       </motion.section>
 
+      {/* Check-in CTA / already checked in */}
       {!todayCheckIn ? (
         <motion.section
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.05 }}
-          className="rounded-[2rem] border border-teal-100 bg-teal-50 p-6 shadow-sm"
         >
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-            <div className="max-w-2xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-teal-700">
-                Today's check-in
-              </p>
-              <h2 className="mt-3 text-2xl font-semibold text-slate-900">
-                Take two minutes to log how you're feeling today
-              </h2>
-              <p className="mt-2 text-sm text-slate-600">
-                A quick reflection helps you notice patterns early and build a
-                more complete picture of your wellbeing over time.
-              </p>
+          <Card className="border-teal-100 bg-teal-50 p-6 shadow-sm">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+              <div className="max-w-2xl">
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-teal-700">
+                  Today's check-in
+                </p>
+                <h2 className="mt-3 text-2xl font-semibold text-slate-900">
+                  Take two minutes to log how you're feeling today
+                </h2>
+                <p className="mt-2 text-sm text-slate-600">
+                  A quick reflection helps you notice patterns early and build a
+                  more complete picture of your wellbeing over time.
+                </p>
+              </div>
+              <Link
+                to="/check-in"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-teal-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-teal-700"
+              >
+                Start today's check-in
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
-
-            <Link
-              to="/check-in"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-teal-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-teal-700"
-            >
-              Start today's check-in
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
+          </Card>
         </motion.section>
       ) : (
-        <section className="rounded-[2rem] border border-emerald-100 bg-emerald-50 p-6">
+        <Card className="border-emerald-100 bg-emerald-50 p-6 shadow-sm">
           <div className="flex items-start gap-3">
             <ShieldCheck className="mt-0.5 h-5 w-5 text-emerald-600" />
             <div>
@@ -311,11 +332,12 @@ export default function DashboardPage() {
               </p>
             </div>
           </div>
-        </section>
+        </Card>
       )}
 
+      {/* Metric cards */}
       <section className="grid gap-6 lg:grid-cols-3">
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <Card className="p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="rounded-2xl bg-amber-50 p-3 text-amber-600">
               <HeartPulse className="h-5 w-5" />
@@ -334,9 +356,9 @@ export default function DashboardPage() {
               "Complete a few check-ins to see your mood trend.",
             )}
           </p>
-        </div>
+        </Card>
 
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <Card className="p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="rounded-2xl bg-sky-50 p-3 text-sky-600">
               <Activity className="h-5 w-5" />
@@ -359,9 +381,9 @@ export default function DashboardPage() {
               "We estimate energy from mood and note keywords when available.",
             )}
           </p>
-        </div>
+        </Card>
 
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <Card className="p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="rounded-2xl bg-rose-50 p-3 text-rose-600">
               <MessageSquareText className="h-5 w-5" />
@@ -382,36 +404,39 @@ export default function DashboardPage() {
                   ? "Stress signals look moderate overall."
                   : "Recent entries suggest lower stress."}
           </p>
-        </div>
+        </Card>
       </section>
 
+      {/* Recent check-ins + sidebar */}
       <section className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">
-                Recent check-ins
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold text-slate-900">
-                Your latest reflections
-              </h2>
+        <Card className="p-6 shadow-sm">
+          <CardHeader>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">
+                  Recent check-ins
+                </p>
+                <CardTitle className="mt-2 text-2xl">
+                  Your latest reflections
+                </CardTitle>
+              </div>
+              {todayCheckIn ? (
+                <span className="text-sm text-muted-foreground">
+                  ✅ Today's check-in completed
+                </span>
+              ) : (
+                <Link
+                  to="/check-in"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-teal-700 hover:text-teal-800"
+                >
+                  New check-in
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              )}
             </div>
-            {todayCheckIn ? (
-              <span className="text-sm text-muted-foreground">
-                ✅ Today's check-in completed
-              </span>
-            ) : (
-              <Link
-                to="/check-in"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-teal-700 hover:text-teal-800"
-              >
-                New check-in
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            )}
-          </div>
+          </CardHeader>
 
-          <div className="mt-6">
+          <CardContent className="mt-6">
             {recentCheckInsQuery.isLoading ? (
               <div className="space-y-3">
                 {[0, 1, 2].map((item) => (
@@ -435,7 +460,13 @@ export default function DashboardPage() {
                 {parsedCheckIns.slice(0, 5).map((checkIn) => (
                   <article
                     key={checkIn.id}
-                    className="rounded-3xl border border-slate-200 p-5 transition hover:border-teal-200 hover:bg-slate-50"
+                    onClick={() => {
+                      const raw = (recentCheckInsQuery.data ?? []).find(
+                        (r) => r.id === checkIn.id,
+                      );
+                      if (raw) openCheckIn(raw as CheckInDto);
+                    }}
+                    className="cursor-pointer rounded-3xl border border-slate-200 p-5 transition hover:border-teal-200 hover:bg-slate-50"
                   >
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
@@ -454,14 +485,20 @@ export default function DashboardPage() {
                         })}
                       </span>
                     </div>
-
-                    <p className="mt-4 text-sm leading-6 text-slate-600">
-                      {checkIn.note ??
-                        checkIn.notes ??
-                        "No additional notes provided."}
-                    </p>
                   </article>
                 ))}
+                {/* Detail modal / slide-over */}
+                {selectedCheckIn ? (
+                  <DetailModal
+                    selectedCheckIn={selectedCheckIn}
+                    editingResponses={editingResponses}
+                    setEditingResponses={setEditingResponses}
+                    editingNotes={editingNotes}
+                    setEditingNotes={setEditingNotes}
+                    onClose={closeCheckIn}
+                    onSave={saveCheckIn}
+                  />
+                ) : null}
               </div>
             ) : (
               <div className="rounded-3xl border border-dashed border-slate-300 p-8 text-center">
@@ -482,15 +519,18 @@ export default function DashboardPage() {
                 </Link>
               </div>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         <div className="space-y-6">
-          <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">
-              Quick actions
-            </p>
-            <div className="mt-5 space-y-3">
+          {/* Quick actions */}
+          <Card className="p-6 shadow-sm">
+            <CardHeader>
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">
+                Quick actions
+              </p>
+            </CardHeader>
+            <CardContent className="mt-5 space-y-3">
               <Link
                 to="/community"
                 className="flex items-center justify-between rounded-3xl border border-slate-200 px-4 py-4 text-sm font-medium text-slate-700 transition hover:border-teal-200 hover:text-slate-900"
@@ -512,14 +552,17 @@ export default function DashboardPage() {
                 Explore guided content
                 <ArrowRight className="h-4 w-4 text-slate-400" />
               </Link>
-            </div>
-          </section>
+            </CardContent>
+          </Card>
 
-          <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">
-              Suggested resources
-            </p>
-            <div className="mt-5 space-y-4">
+          {/* Suggested resources */}
+          <Card className="p-6 shadow-sm">
+            <CardHeader>
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">
+                Suggested resources
+              </p>
+            </CardHeader>
+            <CardContent className="mt-5 space-y-4">
               <div className="rounded-3xl bg-slate-50 p-4">
                 <div className="flex items-start gap-3">
                   <BookOpen className="mt-0.5 h-5 w-5 text-teal-600" />
@@ -549,10 +592,11 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
-            </div>
-          </section>
+            </CardContent>
+          </Card>
 
-          <section className="rounded-[2rem] border border-slate-200 bg-slate-950 p-6 text-white shadow-sm">
+          {/* Privacy */}
+          <Card className="bg-slate-950 p-6 text-white shadow-sm">
             <div className="flex items-start gap-3">
               <Lock className="mt-0.5 h-5 w-5 text-teal-300" />
               <div>
@@ -568,7 +612,7 @@ export default function DashboardPage() {
                 </p>
               </div>
             </div>
-          </section>
+          </Card>
         </div>
       </section>
     </div>

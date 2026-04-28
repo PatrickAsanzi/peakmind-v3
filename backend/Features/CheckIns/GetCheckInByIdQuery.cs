@@ -1,12 +1,12 @@
+using backend.Features.CheckIns;
 using MediatR;
-using Shared.Infrastructure.Entities;
 
 namespace Features.CheckIns;
 
 public record GetCheckInByIdQuery(
     Guid Id
-    ) : IRequest<CheckIn?>;
+    ) : IRequest<CheckInDto?>;
 public record GetUserCheckInsQuery(
     Guid UserId,
     int? Days = null
-) : IRequest<List<CheckIn>>;
+) : IRequest<List<CheckInDto>>;

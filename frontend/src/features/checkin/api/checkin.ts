@@ -1,6 +1,10 @@
 import { apiFetch } from "../../../shared/api";
-import type { CompleteCheckInPayload } from "../types";
-import type { RecentCheckIn } from "../types";
+import type {
+  CompleteCheckInPayload,
+  CheckInQuestion,
+  CreateCheckInDto,
+  CheckInDto,
+} from "../types";
 
 export function getCheckInPrompt() {
   return Promise.resolve({
@@ -10,7 +14,11 @@ export function getCheckInPrompt() {
   });
 }
 
-export function createCheckIn(payload: { userId: string; notes: string }) {
+export function getCheckInQuestions() {
+  return apiFetch<CheckInQuestion[]>("/checkin-questions");
+}
+
+export function createCheckIn(payload: CreateCheckInDto) {
   return apiFetch<string>("/checkins", {
     method: "POST",
     body: JSON.stringify(payload),
@@ -18,14 +26,23 @@ export function createCheckIn(payload: { userId: string; notes: string }) {
 }
 
 export async function completeCheckIn(payload: CompleteCheckInPayload) {
-  await createCheckIn({
+  const dto: CreateCheckInDto = {
     userId: payload.userId,
-    notes: `Mood: ${payload.mood}${payload.note ? `\nNote: ${payload.note}` : ""}`,
-  });
+    notes: payload.note,
+    responses: [],
+  };
+  await createCheckIn(dto);
   return { success: true, nextPath: "/dashboard" };
 }
 
 export function getUserCheckIns(userId: string, days?: number) {
   const params = days ? `?days=${days}` : "";
-  return apiFetch<RecentCheckIn[]>(`/checkins/user/${userId}${params}`);
+  return apiFetch<CheckInDto[]>(`/checkins/user/${userId}${params}`);
+}
+
+export function updateCheckIn(id: string, dto: CreateCheckInDto) {
+  return apiFetch<boolean>(`/checkins/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(dto),
+  });
 }
